@@ -1,0 +1,33 @@
+{
+  "name": "LinkedIn Data fetch",
+  "version": "1.0",
+  "description": "Fetches data from LinkedIn on providing company name with designation",
+  "manifest_version": 2,
+  "permissions": [
+    "tabs",
+    "https://www.linkedin.com/*"
+  ],
+  "browser_action": {
+    "default_icon": "icon.png"
+  },
+  "background":{
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+          "https://www.linkedin.com/*"
+      ],
+      "js": [
+          "js/jquery.js",
+          "js/underscore.js",
+          "js/myscript.js"
+      ],
+      "css": [
+          "css/style.css"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+}
