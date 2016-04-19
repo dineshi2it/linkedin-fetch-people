@@ -145,3 +145,13 @@ $(".reset-records").off("click").on("click", function(event) {
 //Starting point for the script
 let linkedInData = [["First Name", "Last Name", "Middle Name", "Job Title1", "Company1", "Job Title2", "Company2", "City", "Country", "Industry"]];
 init();
+
+//Navigate to next page after every 20 secs
+let paginate = setInterval(function(){
+  if($("#results-pagination .next .page-link").length) {
+    $("#results-pagination .next .page-link")[0].click();
+  } else {
+    $(".export-as-csv").click();
+    clearInterval(paginate);
+  }
+}, 20000);
