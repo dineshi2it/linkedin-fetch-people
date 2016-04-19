@@ -1,5 +1,6 @@
 <html>
   <head>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
     <script src="js/jquery.js"></script>
     <script src="js/underscore.js"></script>
     <script src="js/csv.min.js"></script>
@@ -7,21 +8,28 @@
   </head>
   <body>
     <div>
-      <input id="chooseFile" type="file" />
+      <div>
+        <label>step 1:</label>
+        <input id="chooseFile" type="file" />
+      </div>
+      <div>
+        <label>Step 2: Enter Job title </label>
+        <input id="companyTitle" type="text" value=""/>
+      </div>
+      <div>
+        <label>step 3:</label>
+        <input id="openLinkedIn" type="button" name="submit" value="Open"/>
+      </div>
       <div>
         <table>
           <thead>
             <tr>
-              <td>Company </td>
-              <td>Name</td>
+              <td><b>Company</b></td>
             </tr>
           </thead>
           <tbody>
           </tbody>
         </table>
-      <div>
-      <div>
-        <input id="openLinkedIn" type="button" name="submit" value="next">
       </div>
     </div>
   </body>

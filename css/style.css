@@ -7,11 +7,13 @@
   width: 150px;
   background: white;
 }
-
 .records-count, .reset-records {
   border-bottom: 1px solid #e0e0e0;
 }
-
 .records-count, .reset-records, .export-as-csv {
   cursor: pointer;
+  padding: 10px;
+}
+input {
+  margin: 10px;
 }

@@ -1,57 +1,120 @@
-function exportAsCsv() {
+/**
+ * Export given data in csv format
+ * @param records
+ * @param fileName
+ */
+function exportAsCsv(records, fileName) {
   var data = records;
-  records = [];
   var csvContent = "data:text/csv;charset=utf-8,";
   data.forEach(function(infoArray, index){
     for(var i=0; i < infoArray.length; i++) {
-      infoArray[i] = '"' + infoArray[i].replace(/'/g, "\'").replace(/"/g, "\'") + '"';
+      infoArray[i] = '"' + infoArray[i].trim().replace(/'/g, "\'").replace(/"/g, "\'") + '"';
     }
     dataString = infoArray.join(",");
     csvContent += index < data.length ? dataString+ "\n" : dataString;
   });
-  console.log("csvContent", csvContent);
   var encodedUri = encodeURI(csvContent);
   var link = document.createElement("a");
   link.setAttribute("href", encodedUri);
-  link.setAttribute("download", "my_data.csv");
-
+  link.setAttribute("download", fileName);
   link.click();
 }
 
+/**
+ * Name combinations construction
+ */
+let nameCombination = [["id", "company"]];
+function constructNameCombination(firstName, lastName, company) {
+  if(firstName && company) {
+    nameCombination.push([firstName, company]);
+    nameCombination.push([firstName + "." + lastName, company]);
+    nameCombination.push([firstName + "." + lastName.charAt(0), company]);
+    nameCombination.push([firstName + "_" + lastName, company]);
+    nameCombination.push([firstName + lastName, company]);
+    nameCombination.push([firstName + lastName.charAt(0), company]);
+    nameCombination.push([firstName.charAt(0) + lastName, company]);
+  }
+}
+
+/**
+ * Iterate each result set and construct LinkedIn data
+ */
 function constructData() {
   $(".search-results .result").each(function() {
-    let name = $(this).find(".bd h3 a").text() || "";
-    let description = $(this).find(".description").text() || "";
-    let current = $(this).find(".snippet dd .title").text() || "";
+    let isRequired = false;
+
+    let nameArray = ($(this).find(".bd h3 a.title").text() || "").split(" ");
+    let firstName = nameArray.splice(0,1)[0];
+    let lastName = nameArray.splice(nameArray.length - 1, 1)[0];
+    let middleName = "";
+    if(nameArray.length) middleName = nameArray.join(" ");
+
+    let title1 = "", company1 = "", title2 = ""; company2 = "";
+    let currenthtml1 = ($(this).find(".snippet dd .title:eq(0)").html() || "").split(" at ");
+    let titleHtml1 = $("<div>" + currenthtml1[0] + "</div>");
+    let companyHtml1 = $("<div>" + currenthtml1[1] + "</div>");
+    if(titleHtml1.find("b").length && companyHtml1.find("b").length) {
+      title1 = titleHtml1.text();
+      company1 = companyHtml1.text();
+      isRequired = true;
+    }
+
+    let currenthtml2 = ($(this).find(".snippet dd .title:eq(1)").html() || "").split("at");
+    let titleHtml2 = $("<div>" + currenthtml2[0] + "</div>");
+    let companyHtml2 = $("<div>" + currenthtml2[1] + "</div>");
+    if(titleHtml2.find("b").length && companyHtml2.find("b").length) {
+      title2 = titleHtml2.text();
+      company2 = companyHtml2.text();
+      isRequired = true;
+    }
+
     let location = $(this).find(".demographic dd.separator").text() || "";
+    let city = "", country = "";
+    if(location.indexOf("Area,") !== -1) {
+      locationArray = location.split("Area,");
+      city = locationArray[0];
+      country = locationArray[1];
+    } else if(location.indexOf("Area") !== -1) {
+      locationArray = location.split("Area");
+      city = locationArray[0];
+      country = locationArray[1];
+    } else if(location.indexOf(",") !== -1) {
+      locationArray = location.split(",");
+      country = locationArray.splice(locationArray.length - 1, 1)[0];;
+      city = locationArray.join(", ");
+    } else {
+      country = location;
+    }
     let industry = $(this).find(".demographic dd:eq(1)").text() || "";
-    let past = "";
-    $(this).find(".snippet dd .abstract-trunc").each(function(index){
-      if (index === 0) past = $(this).text();
-      else past += ", "+$(this).text();
-    });
-    let row = [name, description, current, past, location, industry];
-    let isDuplicate = false;
-    _.each(records, function(record, index){
-      if(_.isEqual(record, row)) isDuplicate = true;
+    let row = [firstName, lastName, middleName, title1, company1, title2, company2, city, country, industry];
+    _.each(linkedInData, function(record, index) {
+      if(_.isEqual(record, row)) isRequired = false;
     })
-    if(!isDuplicate) records.push(row);
+    if(isRequired) {
+      linkedInData.push(row);
+      constructNameCombination(firstName, lastName, company1 + (company2 ? ", " : "") + company2);
+    }
   });
 }
 
+/**
+ * Recursive call to unbind & bind events whenever result dom changes
+ */
 function init() {
+  //Add current page data to linkedInData on clicking page link.
   $('.page-link').off('click').on('click', function(event) {
     constructData();
-    console.log("hey");
-    //subtract header
-    $(".export-wrapper .records-count span").html(records.length - 1);
+    //Subtract header
+    $(".export-wrapper .records-count span").html(linkedInData.length - 1);
   });
   $(".non-artdeco").off("DOMSubtreeModified").on("DOMSubtreeModified", function(){
-    console.log("this works great");
     init();
   });
 }
 
+/**
+ * Append DOM to linkedin page positioning fixed to top right
+ */
 $("body").append($(
   "<div class='export-wrapper'>" +
     "<div class='records-count'><span> 0 </span> Record(s) Added</div>" +
@@ -60,16 +123,25 @@ $("body").append($(
   "</div>"
 ));
 
+/**
+ * Construct data and call appropriate methods to download data in csv
+ */
 $(".export-as-csv").off("click").on("click", function(event) {
   constructData();
-  exportAsCsv();
+  exportAsCsv(linkedInData, "linked-data.csv");
+  exportAsCsv(nameCombination, "name-combination.csv");
 });
 
+/**
+ * Reset LinkedIn data and name combinations
+ */
 $(".reset-records").off("click").on("click", function(event) {
-  records = [["name", "description", "current", "past", "location", "industry"]];
+  linkedInData = [["First Name", "Last Name", "Middle Name", "Job Title1", "Company1", "Job Title2", "Company2", "City", "Country", "Industry"]];
+  nameCombination = [["id", "company"]];
   //subtract header
-  $(".export-wrapper .records-count span").html(records.length - 1);
+  $(".export-wrapper .records-count span").html(linkedInData.length - 1);
 });
 
-let records = [["name", "description", "current", "past", "location", "industry"]];
+//Starting point for the script
+let linkedInData = [["First Name", "Last Name", "Middle Name", "Job Title1", "Company1", "Job Title2", "Company2", "City", "Country", "Industry"]];
 init();

@@ -28,17 +28,15 @@ document.addEventListener('DOMContentLoaded', function() {
           .append($('<td>')
             .text(row.company)
           )
-          .append($('<td>')
-            .text(row.title)
-          )
         );
     });
     companies = _.uniq(companies);
-    titles = _.uniq(titles);
   }
 
   function constructUrl(){
-    let baseUrl = "https://www.linkedin.com/vsearch/p?"
+    titles = $("#companyTitle").val().split(",");
+    titles = _.uniq(titles);
+    let baseUrl = "https://www.linkedin.com/vsearch/p?titleScope=C&companyScope=C&"
     let companyUrl = "company="
     let titleUrl = "title=";
     _.each(companies,function(company, index){
