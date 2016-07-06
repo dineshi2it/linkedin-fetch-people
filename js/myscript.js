@@ -107,7 +107,7 @@ function init() {
     //Subtract header
     $(".export-wrapper .records-count span").html(linkedInData.length - 1);
   });
-  $(".non-artdeco").off("DOMSubtreeModified").on("DOMSubtreeModified", function(){
+  $(".artdeco").off("DOMSubtreeModified").on("DOMSubtreeModified", function(){
     init();
   });
 }
